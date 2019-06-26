@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import psw.lab7.lab7.models.User;
 import psw.lab7.lab7.repositories.UserRepository;
 
-@SpringUI(path = "")
+@SpringUI(path = "/login")
 public class LoginUI extends UI {
 
     @Autowired
