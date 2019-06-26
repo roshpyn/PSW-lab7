@@ -11,5 +11,12 @@ public class LoginUI extends UI {
     protected void init(VaadinRequest vaadinRequest) {
         HorizontalSplitPanel root = new HorizontalSplitPanel();
         root.setSizeFull();
+
+        TextArea ta = new TextArea("ta");
+        TextField tf_login = new TextField("Login:");
+        root.addComponent(tf_login);
+        root.addComponent(ta);
+
+        setContent(root);
     }
 }
