@@ -20,7 +20,7 @@ public class UserMessage {
     private User user;
 
     @NotNull
-    @OneToMany
+    @ManyToOne
     private Message message;
 
     @NotNull
