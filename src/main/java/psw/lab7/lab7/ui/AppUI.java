@@ -270,19 +270,94 @@ public class AppUI extends UI {
             Notification.show("Name is not filled", Notification.Type.ERROR_MESSAGE);
             return;
         }
-        User user = new User(0L,login,password1, UserENUM.TRAINEE,name,surname, LocalDate.now());
+        User user = new User(0L,login,password1, UserENUM.TRAINEE,email,name,surname, LocalDate.now());
         userRepository.save(user);
         Notification.show("Successfull signed", Notification.Type.WARNING_MESSAGE);
     }
     // tab adminView
     //TODO
     private TabSheet adminTabSheet = new TabSheet();
+    private GridLayout adminTabAddTrainer= new GridLayout(3,3);
+    private Label adminTabAddTrainerLabel;
+    private TextField adminTabAddTrainerLogin;
+    private TextField adminTabAddTrainerPassword;
+    private TextField adminTabAddTrainerEmail;
+    private TextField adminTabAddTrainerName;
+    private TextField adminTabAddTrainerSurame;
+    private Button adminTabAddTrainerButton;
 
-
+    private GridLayout adminTabConfirmApplication = new GridLayout(3,3);
+    private ComboBox<UserApplication> adminTabConfirmApplicationComboBox;
+    private List<UserApplication> userApplications;
+    private Button adminTabConfirmApplicationConfirmButton;
+    private Button adminTabConfirmApplicationDeleteButton;
+    
     private void initAdminTab() {
-        //adminTabSheet.setVisible(false);
+        initAdminTabAddTrainer();
+        initadminTabConfirmApplication();
         adminTabSheet.setSizeFull();
     }
+
+    private void initadminTabConfirmApplication() {
+        FormLayout formLayout = new FormLayout();
+        adminTabSheet.addTab(adminTabConfirmApplication,"Confirm participation");
+        userApplications = userApplicationRepository.findAll();
+        adminTabConfirmApplicationComboBox = new ComboBox<>("Application",userApplications);
+        adminTabConfirmApplicationComboBox.setSizeFull();
+        adminTabConfirmApplicationConfirmButton = new Button("CONFIRM");
+        adminTabConfirmApplicationDeleteButton = new Button("DELETE");
+        formLayout.addComponents(adminTabConfirmApplicationComboBox,
+                adminTabConfirmApplicationConfirmButton,
+                adminTabConfirmApplicationDeleteButton
+                );
+        adminTabConfirmApplication.addComponent(formLayout,1,1);
+        adminTabConfirmApplication.setSizeFull();
+    }
+
+    private void initAdminTabAddTrainer(){
+        FormLayout formLayout = new FormLayout();
+        adminTabSheet.addTab(adminTabAddTrainer,"Add trainer");
+        adminTabAddTrainerLabel = new Label("Add new trainer".toUpperCase());
+        adminTabAddTrainerLogin = new TextField("Login:");
+        adminTabAddTrainerPassword = new TextField("Password:");
+        adminTabAddTrainerEmail = new TextField("Email:");
+        adminTabAddTrainerName = new TextField("Name:");
+        adminTabAddTrainerSurame = new TextField("Surname:");
+        adminTabAddTrainerButton = new Button("ADD");
+        formLayout.addComponents(adminTabAddTrainerLabel,
+                adminTabAddTrainerName,adminTabAddTrainerSurame,
+                adminTabAddTrainerLogin,adminTabAddTrainerPassword,
+                adminTabAddTrainerEmail,
+                adminTabAddTrainerButton);
+        adminTabAddTrainer.addComponent(formLayout,1,1);
+        adminTabAddTrainer.setSizeFull();
+
+        AdminTabAddTrainerListeners();
+    }
+
+    private void AdminTabAddTrainerListeners() {
+        adminTabAddTrainerButton.addClickListener( l ->{
+           String login = adminTabAddTrainerLogin.getValue();
+           String password = adminTabAddTrainerPassword.getValue();
+           String email = adminTabAddTrainerEmail.getValue();
+           String name = adminTabAddTrainerName.getValue();
+           String surname = adminTabAddTrainerSurame.getValue();
+           boolean err = false;
+           if(login.isEmpty()) err = true;
+           if(password.isEmpty()) err = true;
+           if(email.isEmpty()) err = true;
+           if(checkEmail(email)) err = true;
+           if(name.isEmpty()) err = true;
+           if(surname.isEmpty()) err = true;
+
+           User user = new User(0L,
+                   login,password,
+                   UserENUM.TRAINER,email,
+                   name,surname,LocalDate.now());
+            user = userRepository.save(user);
+        });
+    }
+
     // tab trainerView
     //TODO
     private TabSheet trainerTabSheet = new TabSheet();
