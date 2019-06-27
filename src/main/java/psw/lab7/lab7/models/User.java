@@ -33,6 +33,9 @@ public class User {
     private UserENUM type;
 
     @NotNull
+    private String email;
+
+    @NotNull
     private String name;
 
     @NotNull
