@@ -5,22 +5,28 @@ import com.vaadin.spring.annotation.SpringUI;
 import com.vaadin.ui.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import psw.lab7.lab7.UserENUM;
+import psw.lab7.lab7.models.Course;
 import psw.lab7.lab7.models.User;
+import psw.lab7.lab7.models.UserApplication;
 import psw.lab7.lab7.repositories.*;
 
-import javax.jws.soap.SOAPBinding;
+import java.security.PrivateKey;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 
-@SpringUI(path = "")
+@SpringUI
 public class AppUI extends UI {
     private byte incorrectLogIn = 0;
     private User loggedUser = null;
 
     @Autowired
-    BlockOfLessonsRepository blockOfLessonsRepository;
+    private BlockOfLessonsRepository blockOfLessonsRepository;
 
     @Autowired
     private CourseRepository courseRepository;
@@ -40,7 +46,7 @@ public class AppUI extends UI {
     @Autowired
     private UserRepository userRepository;
 
-    boolean checkEmail(String email) {
+    private boolean checkEmail(String email) {
 
         String regex = "^[\\w!#$%&'*+/=?`{|}~^-]+(?:\\.[\\w!#$%&'*+/=?`{|}~^-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,6}$";
         Pattern pattern = Pattern.compile(regex);
@@ -48,12 +54,9 @@ public class AppUI extends UI {
 
         return matcher.matches();
     }
-
     TabSheet tabsheet;
-
     @Override
     protected void init(VaadinRequest vaadinRequest){
-        TabSheet tabsheet;
         tabsheet = new TabSheet();
 
 
@@ -63,6 +66,9 @@ public class AppUI extends UI {
         initSignUpTab();
         tabsheet.addTab(tabSignUp,"Sign up");
 
+        //initTraineeTab();
+        //tabsheet.addTab(traineeTabSheet,"Trainee view");
+
 
         tabsheet.setSizeFull();
         setContent(tabsheet);
@@ -70,14 +76,14 @@ public class AppUI extends UI {
     }
 
     //tab login
-    GridLayout tabLogin = new GridLayout(3,3);
 
-    TextField loginLoginTextField;
-    TextField loginPasswordTextField;
-    PasswordField loginPasswordField;
-    CheckBox loginShowPasswordCheckBox;
-    Button loginButton;
+    private GridLayout tabLogin = new GridLayout(3,3);
+    private TextField loginLoginTextField;
 
+    private TextField loginPasswordTextField;
+    private PasswordField loginPasswordField;
+    private CheckBox loginShowPasswordCheckBox;
+    private Button loginButton;
     private void initLoginTab(){
         FormLayout formLayout = new FormLayout();
         loginLoginTextField = new TextField("Login:");
@@ -100,7 +106,6 @@ public class AppUI extends UI {
         tabLogin.setSizeFull();
         tabLogin.addComponent(formLayout,1,1);
     }
-
     private void tabLoginListeners() {
         loginShowPasswordCheckBox.addValueChangeListener(l ->{
             boolean value = loginShowPasswordCheckBox.getValue();
@@ -127,7 +132,6 @@ public class AppUI extends UI {
                 return;
             }
 
-            //TODO
             User user;
             try {
                 user = userRepository.findByLogin(login);
@@ -149,31 +153,40 @@ public class AppUI extends UI {
                 case ADMIN:
                     Notification.show("Succesfull! Logged as ADMINISTRATOR",Notification.Type.WARNING_MESSAGE);
                     loggedUser = user;
+                    initAdminTab();
+                    tabsheet.addTab(adminTabSheet,"Admin view");
+                    tabsheet.setSelectedTab(adminTabSheet);
                     break;
                 case TRAINER:
-
+                    initTrainerTab();
+                    tabsheet.addTab(trainerTabSheet,"Trainer view");
+                    tabsheet.setSelectedTab(trainerTabSheet);
                     break;
                 case TRAINEE:
-
+                    Notification.show("Logged as TRAINEE!",Notification.Type.WARNING_MESSAGE);
+                    loggedUser = user;
+                    initTraineeTab();
+                    tabsheet.addTab(traineeTabSheet,"Trainee view");
+                    tabsheet.setSelectedTab(traineeTabSheet);
                     break;
             }
 
         });
     }
     //tab sign up
+    private GridLayout tabSignUp = new GridLayout(3,3);
 
-    GridLayout tabSignUp = new GridLayout(3,3);
+    private TextField registerNameTextField;
+    private TextField registerSurnameTextField;
+    private TextField registerLoginTextField;
+    private TextField registerEmailTextField;
+    private TextField registerPassword1TextField;
+    private PasswordField registerPassword1Field;
+    private TextField registerPassword2TextField;
+    private PasswordField registerPassword2Field;
+    private CheckBox registerShowPasswordCheckBox;
+    private Button registerButton;
 
-    TextField registerNameTextField;
-    TextField registerSurnameTextField;
-    TextField registerLoginTextField;
-    TextField registerEmailTextField;
-    TextField registerPassword1TextField;
-    PasswordField registerPassword1Field;
-    TextField registerPassword2TextField;
-    PasswordField registerPassword2Field;
-    CheckBox registerShowPasswordCheckBox;
-    Button registerButton;
     private void initSignUpTab(){
         FormLayout formLayout = new FormLayout();
         registerNameTextField = new TextField("Name:");
@@ -200,64 +213,149 @@ public class AppUI extends UI {
         tabSignUp.setSizeFull();
         tabSignUp.addComponent(formLayout,1,1);
     }
-
     private void tabSignUpListeners() {
-        registerShowPasswordCheckBox.addValueChangeListener(l ->{
-           boolean value = registerShowPasswordCheckBox.getValue();
+        registerShowPasswordCheckBox.addValueChangeListener( l -> swapPasswordTextAndViability());
+        registerButton.addClickListener( l -> signUp());
+    }
+    private void swapPasswordTextAndViability(){
+        boolean value = registerShowPasswordCheckBox.getValue();
 
-           registerPassword1TextField.setVisible(value);
-           registerPassword2TextField.setVisible(value);
-           registerPassword1Field.setVisible(!value);
-           registerPassword2Field.setVisible(!value);
+        registerPassword1TextField.setVisible(value);
+        registerPassword2TextField.setVisible(value);
+        registerPassword1Field.setVisible(!value);
+        registerPassword2Field.setVisible(!value);
 
-           if(!value){
-               registerPassword1Field.setValue(registerPassword1TextField.getValue());
-               registerPassword2Field.setValue(registerPassword2TextField.getValue());
-               return;
-           }
-           registerPassword1TextField.setValue(registerPassword1Field.getValue());
-           registerPassword2TextField.setValue(registerPassword2Field.getValue());
+        if(!value){
+            registerPassword1Field.setValue(registerPassword1TextField.getValue());
+            registerPassword2Field.setValue(registerPassword2TextField.getValue());
+            return;
+        }
+        registerPassword1TextField.setValue(registerPassword1Field.getValue());
+        registerPassword2TextField.setValue(registerPassword2Field.getValue());
 
 
-        });
-        registerButton.addClickListener(l ->{
-            String login = registerLoginTextField.getValue();
-            try {
-                User eqistingUser = userRepository.findByLogin(login);
+    }
+    private void signUp(){
+        String login = registerLoginTextField.getValue();
+        try {
+            User eqistingUser = userRepository.findByLogin(login);
+            if(eqistingUser.getLogin().equals(login)) {
                 Notification.show("Username taken!", Notification.Type.ERROR_MESSAGE);
                 return;
+            }
+        }
+        catch (Exception e){
+            System.out.println("Null ptr exception expected!");
+        }
+
+        boolean value = registerShowPasswordCheckBox.getValue();
+        String password1 = (value)?registerPassword1TextField.getValue():registerPassword1Field.getValue();
+        String password2 = (value)?registerPassword2TextField.getValue():registerPassword2Field.getValue();
+        if(!password1.equals(password2)){
+            Notification.show("Passwords don't match!", Notification.Type.ERROR_MESSAGE);
+            return;
+        }
+        String email = registerEmailTextField.getValue();
+        if(!checkEmail(email)){
+            Notification.show("Email is not valid", Notification.Type.ERROR_MESSAGE);
+            return;
+        }
+        String name = registerNameTextField.getValue();
+        if(name.equals("")){
+            Notification.show("Name is not filled", Notification.Type.ERROR_MESSAGE);
+            return;
+        }
+        String surname = registerSurnameTextField.getValue();
+        if(surname.equals("")){
+            Notification.show("Name is not filled", Notification.Type.ERROR_MESSAGE);
+            return;
+        }
+        User user = new User(0L,login,password1, UserENUM.TRAINEE,name,surname, LocalDate.now());
+        userRepository.save(user);
+        Notification.show("Successfull signed", Notification.Type.WARNING_MESSAGE);
+    }
+    // tab adminView
+    //TODO
+    private TabSheet adminTabSheet = new TabSheet();
+
+
+    private void initAdminTab() {
+        //adminTabSheet.setVisible(false);
+        adminTabSheet.setSizeFull();
+    }
+    // tab trainerView
+    //TODO
+    private TabSheet trainerTabSheet = new TabSheet();
+
+    private void initTrainerTab() {
+        //trainerTabSheet.setVisible(false);
+        adminTabSheet.setSizeFull();
+    }
+
+    // tab traineeView
+    //TODO now
+    private TabSheet traineeTabSheet = new TabSheet();
+    private GridLayout userAplication = new GridLayout(3,3);
+
+    private Label userApplicationLabel = new Label("Apply for the course");
+    private List<Course> courses = null;
+    private List<String> coursesNames = new ArrayList<>();
+    private ComboBox<String> courseComboBox;
+    private Button traineeApplyButton = new Button("APPLY");
+    private Course selectedCourse = null;
+
+    private void initTraineeTab() {
+        //traineeTabSheet.setVisible(false);
+        FormLayout formLayout = new FormLayout();
+        formLayout.addComponent(userApplicationLabel);
+        initApplyComboBox();
+        courseComboBox = new ComboBox<>("Course:",coursesNames);
+        courseComboBox.setPlaceholder("No course selected");
+        formLayout.addComponent(courseComboBox);
+        traineeApplyButton.setDisableOnClick(true);
+        formLayout.addComponent(traineeApplyButton);
+        adminTabSheet.setSizeFull();
+        userAplication.addComponent(formLayout,1,1);
+        userAplication.setSizeFull();
+        traineeTabSheet.addTab(userAplication,"Aplly");
+
+        courseComboBox.addValueChangeListener( l -> {
+            traineeApplyButton.setDisableOnClick(false);
+            try {
+                selectedCourse = (Course) courseRepository.findByName(courseComboBox.getSelectedItem());
             }
             catch (Exception e){
                 System.out.println(e);
             }
+        });
+        traineeApplyButton.addClickListener( l -> {
+            List<UserApplication>  byCourse = userApplicationRepository.findByCourse(selectedCourse);
+            List<UserApplication>  byUser = userApplicationRepository.findByUser(loggedUser);
+            if(!byCourse.isEmpty()){
+                if(!byUser.isEmpty()){
+                    for (UserApplication a : byCourse){
+                        for (UserApplication b : byUser){
+                            if(a.equals(b)) {
+                                Notification.show("Application sended. Wait for the acceptation.",
+                                        Notification.Type.WARNING_MESSAGE);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
 
-            boolean value = registerShowPasswordCheckBox.getValue();
-            String password1 = (value)?registerPassword1TextField.getValue():registerPassword1Field.getValue();
-            String password2 = (value)?registerPassword2TextField.getValue():registerPassword2Field.getValue();
-            if(!password1.equals(password2)){
-                Notification.show("Passwords don't match!", Notification.Type.ERROR_MESSAGE);
-                return;
-            }
-            String email = registerEmailTextField.getValue();
-            if(!checkEmail(email)){
-                Notification.show("Email is not valid", Notification.Type.ERROR_MESSAGE);
-                return;
-            }
-            String name = registerNameTextField.getStyleName();
-            if(name.equals("")){
-                Notification.show("Name is not filled", Notification.Type.ERROR_MESSAGE);
-                return;
-            }
-            String surname = registerSurnameTextField.getStyleName();
-            if(surname.equals("")){
-                Notification.show("Name is not filled", Notification.Type.ERROR_MESSAGE);
-                return;
-            }
-            User user = new User(0L,login,password1, UserENUM.TRAINEE,name,surname, LocalDate.now());
-            userRepository.save(user);
+
+            UserApplication userApplication = new UserApplication(0L, LocalDateTime.now(),loggedUser,selectedCourse);
+            userApplicationRepository.save(userApplication);
 
         });
     }
 
-
+    private void initApplyComboBox() {
+        courses = courseRepository.findAll().stream().collect(Collectors.toList());
+        for (Course course : courses){
+            coursesNames.add(course.getName());
+        }
+    }
 }
