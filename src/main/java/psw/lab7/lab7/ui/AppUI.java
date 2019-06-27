@@ -346,15 +346,32 @@ public class AppUI extends UI {
            if(login.isEmpty()) err = true;
            if(password.isEmpty()) err = true;
            if(email.isEmpty()) err = true;
-           if(checkEmail(email)) err = true;
+           if(!checkEmail(email)) err = true;
            if(name.isEmpty()) err = true;
            if(surname.isEmpty()) err = true;
+
+           if(err){
+               Notification.show("Check trainer data", Notification.Type.ERROR_MESSAGE);
+               return;
+           }
 
            User user = new User(0L,
                    login,password,
                    UserENUM.TRAINER,email,
                    name,surname,LocalDate.now());
+           try{
+               User u = userRepository.findByLogin(login);
+               if(u.getLogin().equals(login)) {
+                   Notification.show("Alredy exists, Login must be UNIQUE", Notification.Type.ERROR_MESSAGE);
+                   return;
+               }
+           }
+           catch (Exception e){
+               System.out.println(e);
+           }
+
             user = userRepository.save(user);
+            Notification.show(user+" added", Notification.Type.WARNING_MESSAGE);
         });
     }
 
