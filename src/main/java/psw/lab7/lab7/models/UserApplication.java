@@ -9,6 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +20,7 @@ public class UserApplication {
     private Long id;
 
     @NotNull
-    private LocalDate date;
+    private LocalDateTime dateTime;
 
     @NotNull
     @ManyToOne

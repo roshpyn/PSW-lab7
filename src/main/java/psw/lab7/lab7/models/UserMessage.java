@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 @Entity
 public class UserMessage {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
