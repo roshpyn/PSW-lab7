@@ -38,11 +38,13 @@ public class InitService {
     @PostConstruct
     void init(){
         User admin = new User(0L,"admin","admin",
-                UserENUM.ADMIN,"Adam","Adamowicz", LocalDate.now());
+                UserENUM.ADMIN,"admin@admin.admin",
+                "Adam","Adamowicz", LocalDate.now());
         admin = userRepository.save(admin);
 
         User user = new User(0L,"ab","ab",
-                UserENUM.TRAINEE,"Jan","Kowalski", LocalDate.now());
+                UserENUM.TRAINEE,"ab@ab.ab",
+                "Jan","Kowalski", LocalDate.now());
         user = userRepository.save(user);
 
 
