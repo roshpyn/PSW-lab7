@@ -40,5 +40,17 @@ public class InitService {
         User admin = new User(0L,"admin","admin",
                 UserENUM.ADMIN,"Adam","Adamowicz", LocalDate.now());
         admin = userRepository.save(admin);
+
+        User user = new User(0L,"ab","ab",
+                UserENUM.TRAINEE,"Jan","Kowalski", LocalDate.now());
+        user = userRepository.save(user);
+
+
+        Course course = new Course(0L,"Test 1");
+        course = courseRepository.save(course);
+
+        Course course2 = new Course(0L,"Test 2");
+        course2 = courseRepository.save(course2);
+
     }
 }
